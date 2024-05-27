@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.nsmap": "cpp",
+        "vector": "cpp"
+    }
+}
