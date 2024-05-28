@@ -8,8 +8,10 @@
 
 #include "onvif/wsdd.nsmap"
 
-#define USERNAME "admin"
-#define PASSWORD "admin123"
+
+
+std::string USERNAME = "admin";
+std::string PASSWORD = "admin123";
 
 #define NAMESPACE_MEDIA_H264 "http://www.onvif.org/ver10/media/wsdl"
 #define NAMESPACE_MEDIA_H265 "http://www.onvif.org/ver20/media/wsdl"
@@ -166,7 +168,7 @@ int ONVIF_GetDeviceInformation(const char *DeviceXAddr) {
     SOAP_ASSERT(NULL != DeviceXAddr);
     SOAP_ASSERT(NULL != (soap = ONVIF_soap_new(SOAP_SOCK_TIMEOUT)));
 
-    ONVIF_SetAuthInfo(soap, USERNAME, PASSWORD);
+    ONVIF_SetAuthInfo(soap, USERNAME.c_str(), PASSWORD.c_str());
 
     result = soap_call___tds__GetDeviceInformation(soap, DeviceXAddr, NULL,
                                                    &devinfo_req, devinfo_resp);
@@ -206,7 +208,7 @@ int ONVIF_GetNtp(const char *DeviceXAddr) {
     SOAP_ASSERT(NULL != DeviceXAddr);
     SOAP_ASSERT(NULL != (soap = ONVIF_soap_new(SOAP_SOCK_TIMEOUT)));
 
-    ONVIF_SetAuthInfo(soap, USERNAME, PASSWORD);
+    ONVIF_SetAuthInfo(soap, USERNAME.c_str(), PASSWORD.c_str());
 
     result = soap_call___tds__GetNTP(soap, DeviceXAddr, NULL, &devntp_req,
                                      devntp_resp);
@@ -238,7 +240,7 @@ int ONVIF_GetCapabilities(const char *DeviceXAddr) {
     SOAP_ASSERT(NULL != DeviceXAddr);
     SOAP_ASSERT(NULL != (soap = ONVIF_soap_new(SOAP_SOCK_TIMEOUT)));
 
-    ONVIF_SetAuthInfo(soap, USERNAME, PASSWORD);
+    ONVIF_SetAuthInfo(soap, USERNAME.c_str(), PASSWORD.c_str());
 
     // memset(&devinfo_req, 0x00, sizeof(devinfo_req));
     // memset(&devinfo_resp, 0x00, sizeof(devinfo_resp));
@@ -309,7 +311,7 @@ int ONVIF_GetStreamUri(const char *DeviceXAddr, char *token) {
     SOAP_ASSERT(NULL != DeviceXAddr);
     SOAP_ASSERT(NULL != (soap = ONVIF_soap_new(SOAP_SOCK_TIMEOUT)));
 
-    ONVIF_SetAuthInfo(soap, USERNAME, PASSWORD);
+    ONVIF_SetAuthInfo(soap, USERNAME.c_str(), PASSWORD.c_str());
 
     //     enum class tt__StreamType {
     // 	RTP_Unicast = 0,
@@ -356,7 +358,7 @@ int ONVIF_GetStreamUri2(const char *media_xaddr, char *token) {
     SOAP_ASSERT(NULL != media_xaddr);
     SOAP_ASSERT(NULL != (soap = ONVIF_soap_new(SOAP_SOCK_TIMEOUT)));
 
-    ONVIF_SetAuthInfo(soap, USERNAME, PASSWORD);
+    ONVIF_SetAuthInfo(soap, USERNAME.c_str(), PASSWORD.c_str());
 
     devstrm_req.Protocol = "RTSP";
     devstrm_req.ProfileToken = token;
@@ -388,7 +390,7 @@ int ONVIF_GetProfiles(const char *media_xaddr) {
     SOAP_ASSERT(NULL != media_xaddr);
     SOAP_ASSERT(NULL != (soap = ONVIF_soap_new(SOAP_SOCK_TIMEOUT)));
 
-    ONVIF_SetAuthInfo(soap, USERNAME, PASSWORD);
+    ONVIF_SetAuthInfo(soap, USERNAME.c_str(), PASSWORD.c_str());
 
     result = soap_call___trt__GetProfiles(soap, media_xaddr, NULL, &devpro_req,
                                           devpro_resp);
@@ -396,7 +398,8 @@ int ONVIF_GetProfiles(const char *media_xaddr) {
     SOAP_CHECK_ERROR(result, soap, "ONVIF_GetProfiles");
 
     for (auto &i : devpro_resp.Profiles) {
-        printf("%s profile %s\n", media_xaddr, i->token.data());
+        printf("%s profile %s encoder:%d ,width:%d ,height:%d frameRate:%d\n", media_xaddr, i->token.data(),i->VideoEncoderConfiguration->Encoding,
+        i->VideoEncoderConfiguration->Resolution->Width,i->VideoEncoderConfiguration->Resolution->Height,i->VideoEncoderConfiguration->RateControl->FrameRateLimit);
         ONVIF_GetStreamUri(media_xaddr,const_cast<char*> (i->token.data()));
     }
 
@@ -422,7 +425,10 @@ int ONVIF_GetProfiles2(const char *media_xaddr) {
     struct _ns3__GetProfiles devpro2_req;
     struct _ns3__GetProfilesResponse devpro2_resp;
 
-    ONVIF_SetAuthInfo(soap, USERNAME, PASSWORD);
+    devpro2_req.Type.push_back("VideoEncoder");
+    devpro2_req.Type.push_back("Metadata");
+
+    ONVIF_SetAuthInfo(soap, USERNAME.c_str(), PASSWORD.c_str());
     result = soap_call___ns3__GetProfiles(soap, media_xaddr, NULL, &devpro2_req,
                                           devpro2_resp);
 
@@ -431,6 +437,8 @@ int ONVIF_GetProfiles2(const char *media_xaddr) {
     for (auto &i : devpro2_resp.Profiles) {
         printf("%s profile2 %s, %s\n", media_xaddr, i->Name.data(),
                i->token.data());
+        printf("format:%s,width:%d,height:%d,rate:%f\n",i->Configurations->VideoEncoder->Encoding.c_str(),i->Configurations->VideoEncoder->Resolution->Width,
+        i->Configurations->VideoEncoder->Resolution->Height,i->Configurations->VideoEncoder->RateControl->FrameRateLimit);
         ONVIF_GetStreamUri2(media_xaddr, const_cast<char*> (i->token.data()));
     }
 
@@ -452,7 +460,7 @@ int ONVIF_GetServices(const char *DeviceXAddr) {
     SOAP_ASSERT(NULL != DeviceXAddr);
     SOAP_ASSERT(NULL != (soap = ONVIF_soap_new(SOAP_SOCK_TIMEOUT)));
 
-    ONVIF_SetAuthInfo(soap, USERNAME, PASSWORD);
+    ONVIF_SetAuthInfo(soap, USERNAME.c_str(), PASSWORD.c_str());
 
     devsrv_req.IncludeCapability = true;
 
@@ -487,9 +495,22 @@ EXIT:
 
 
 int main(int argc, char **argv) {
+    if(argc == 1)
+    {
+        return 0;
+    }
+    char DeviceXAddr[255] = {0};
+    sprintf(DeviceXAddr, "http://%s/onvif/device_service", argv[1]);
 
-    ONVIF_GetServices("http://10.10.25.22/onvif/device_service");
-    ONVIF_GetDeviceInformation("http://10.10.25.22/onvif/device_service")  ;
+    if(argc ==4 )
+    {
+        USERNAME = argv[2];
+        PASSWORD = argv[3];
+    }
 
+    ONVIF_GetDeviceInformation(DeviceXAddr);
+    ONVIF_GetNtp(DeviceXAddr);
+    ONVIF_GetCapabilities(DeviceXAddr);
+    ONVIF_GetServices(DeviceXAddr);
     return 0;
 }

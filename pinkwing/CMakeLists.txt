@@ -8,7 +8,7 @@ file(GLOB_RECURSE SRC_DIR_LIST
         "onvif/*.cpp"
 )
 
-
+set(CMAKE_BUILD_TYPE Debug)
 
 add_library(${PROJECT_NAME} STATIC ${SRC_DIR_LIST})
 
