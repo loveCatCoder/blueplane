@@ -5,9 +5,9 @@
 
 
 #include "include/private.h"
-#include "protocol/rtsp/RtspClient.h"
-#include "protocol/rtp/RtpSession.h"
-#include "protocol/rtcp/RtcpSession.h"
+#include "pinkwing/rtsp/RtspClient.h"
+#include "pinkwing/rtp/RtpSession.h"
+#include "pinkwing/rtcp/RtcpSession.h"
 
 
 class RtspProducer
