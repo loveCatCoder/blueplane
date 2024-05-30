@@ -12,10 +12,13 @@
  *
  * =====================================================================================
 */
-#include "include/private.h"
+
+#include "string.h"
+
+
 #include "RtspAuth.h"
-#include "common/PubBase64.h"
-#include "common/PubMd5.h"
+#include "PubBase64.h"
+#include "PubMd5.h"
 
 
 CRtspAuth::CRtspAuth( const char* strUser, const char* strPassword )

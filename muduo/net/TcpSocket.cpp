@@ -21,11 +21,12 @@ TcpSocket::~TcpSocket()
 {
 }
 
-void TcpSocket::AsyncConnect()
+void TcpSocket::AsyncConnect(ConnectionCallback callback)
 {
   LOG_DBG("TcpClient::connect[%s] - connecting to %s", name_.c_str(), serverAddr_.toIpPort().c_str());
   connect_ = true;
   loop_->runInLoop(std::bind(&TcpSocket::connectInLoop, this)); // FIXME: unsafe
+  connectedCallback_ = callback;
 }
 
 void TcpSocket::Disconnect()
@@ -35,6 +36,11 @@ void TcpSocket::Disconnect()
 void TcpSocket::Send(const void* message, int len)
 {
     send(StringPiece(static_cast<const char*>(message), len));
+}
+
+void TcpSocket::SetReadCallback(MessageCallback callback)
+{
+  messageCallback_ = callback;
 }
 
 void TcpSocket::send(const StringPiece& message)
@@ -236,6 +242,10 @@ void TcpSocket::handleLinkWrite()
       if (connect_)
       {
         connectEstablished(sockfd);
+        if(connectedCallback_)
+        {
+          connectedCallback_(shared_from_this(),0);
+        }
       }
       else
       {
@@ -258,6 +268,10 @@ void TcpSocket::handleLinkError()
     int sockfd = removeAndResetChannel();
     int err = sockets::getSocketError(sockfd);
     LOG_ERR("SO_ERROR = %d %s ", err, strerror_tl(err));
+    if(connectedCallback_)
+    {
+      connectedCallback_(shared_from_this(),-1);
+    }
   }
 }
 

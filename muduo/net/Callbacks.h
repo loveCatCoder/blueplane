@@ -63,7 +63,7 @@ class Buffer;
 class TcpSocket;
 typedef std::shared_ptr<TcpSocket> TcpSocketPtr;
 typedef std::function<void()> TimerCallback;
-typedef std::function<void (const TcpSocketPtr&)> ConnectionCallback;
+typedef std::function<void (const TcpSocketPtr&,int err)> ConnectionCallback;
 typedef std::function<void (const TcpSocketPtr&)> CloseCallback;
 typedef std::function<void (const TcpSocketPtr&)> WriteCompleteCallback;
 typedef std::function<void (const TcpSocketPtr&, size_t)> HighWaterMarkCallback;

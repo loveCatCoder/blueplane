@@ -283,6 +283,14 @@ class Buffer : public muduo::copyable
     return result;
   }
 
+  int readAll(char* buffer)
+  {
+    int len = static_cast<int>(readableBytes());
+    memcpy(buffer,peek(),len);
+    retrieveAll();
+    return len;
+  }
+
   ///
   /// Peek int64_t from network endian
   ///

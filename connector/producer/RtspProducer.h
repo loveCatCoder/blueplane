@@ -5,17 +5,21 @@
 
 
 #include "include/private.h"
-#include "pinkwing/rtsp/RtspClient.h"
-#include "pinkwing/rtp/RtpSession.h"
-#include "pinkwing/rtcp/RtcpSession.h"
+#include "protocol/rtsp/RtspClient.h"
+#include "protocol/rtp/RtpSession.h"
+#include "protocol/rtcp/RtcpSession.h"
 
+#include "muduo/net/EventLoop.h"
+#include "muduo/net/TcpSocket.h"
+
+using namespace muduo::net;
 
 class RtspProducer
 {
 private:
     /* data */
 public:
-    RtspProducer(asio::io_context& io);
+    RtspProducer(EventLoop& loop );
     ~RtspProducer();
 
     int Init();
@@ -35,7 +39,7 @@ public:
     //Receive tcp rtsp rtp message
     int ReceiveTcpMessage();
     int ReceiveRtspMessage();
-    int ReceiveRtpMessage();
+    int  ReceiveRtpMessage(int len);
 
     int SetRouterFrameCallback(std::function<void(FRAME_INFO)> cb);
     int SetReportStatusCallback(std::function<int(std::string id,E_NODE_STATUS eStatus)> cb){m_statusCallback = cb;return SUCCESS;}
@@ -49,8 +53,8 @@ private:
     CRtpSession *m_rtpVideoSession = nullptr;
     CRtcpSession *m_rtcpVideoSession = nullptr;
     RTP_STREAM_INFO m_videoRtpStreamInfo;
-    asio::ip::tcp::socket m_socket;
-    char m_recvBuf[2048] = {0};
+    std::shared_ptr<TcpSocket> m_socket = nullptr;
+    std::array<char,2048> m_recvBuf;
     int m_recvLen = 0;
     std::string m_currStatus = "teardown";
     std::function<void(FRAME_INFO)> m_routerFrameCallback;

@@ -12,6 +12,9 @@
  *
  * =====================================================================================
 */
+
+#include "string.h"
+
 #include "RtspClient.h"
 
 CRtspClient::CRtspClient( )

@@ -2,14 +2,7 @@
 #ifndef _ONION_PRIVATE_H_
 #define _ONION_PRIVATE_H_
 
-
-
-
-
-
-
 #include <time.h>
-
 
 #include <string>
 #include <vector>
@@ -21,21 +14,45 @@
 
 #include <arpa/inet.h>
 
-#include <zlog/src/zlog.h>
-#include <asio/include/asio.hpp>
-
 #define project_name "onion"
-
-
 
 #define SUCCESS 0
 #define FAILURE -1
 
+#define log_debug(...) \
+        do \
+        { \
+            fprintf(stderr,"%s(%s:%d)", __FILE__,__func__,__LINE__); \
+                fprintf(stderr, __VA_ARGS__); \
+                fprintf(stderr, "\n"); \
+        } \
+        while(0);
+#define log_info(...) \
+        do \
+        { \
+            fprintf(stderr,"%s(%s:%d)", __FILE__,__func__,__LINE__); \
+                fprintf(stderr, __VA_ARGS__); \
+                fprintf(stderr, "\n"); \
+        } \
+        while(0);
+#define log_warn(...) \
+        do \
+        { \
+            fprintf(stderr,"%s(%s:%d)", __FILE__,__func__,__LINE__); \
+                fprintf(stderr, __VA_ARGS__); \
+                fprintf(stderr, "\n"); \
+        } \
+        while(0);
+#define log_error(...) \
+        do \
+        { \
+            fprintf(stderr,"%s(%s:%d)", __FILE__,__func__,__LINE__); \
+                fprintf(stderr, __VA_ARGS__); \
+                fprintf(stderr, "\n"); \
+        } \
+        while(0);
 
-#define log_debug   dzlog_debug
-#define log_info    dzlog_info
-#define log_warn    dzlog_warn
-#define log_error   dzlog_error
+
 
 
 #define UDP_MAX_RTP_LEN 1400

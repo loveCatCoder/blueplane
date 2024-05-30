@@ -36,11 +36,11 @@ public:
                 const string &nameArg);
     ~TcpSocket();
 
-    void AsyncConnect();
+    void AsyncConnect(ConnectionCallback callback);
     void Disconnect();
 
     void Send(const void* message, int len);
-
+    void SetReadCallback(MessageCallback callback);
 private:
     enum States { kDisconnected, kConnecting, kConnected, kDisconnecting };
     void connectInLoop();
@@ -87,19 +87,8 @@ private:
     WriteCompleteCallback writeCompleteCallback_;
     HighWaterMarkCallback highWaterMarkCallback_;
     CloseCallback closeCallback_;
+    ConnectionCallback connectedCallback_;
 };
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

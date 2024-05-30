@@ -12,6 +12,9 @@
  *
  * =====================================================================================
 */
+
+#include "string.h"
+
 #include "RtspServer.h"
 
 CRtspServer::CRtspServer( )
