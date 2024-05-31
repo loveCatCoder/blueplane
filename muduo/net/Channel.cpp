@@ -36,6 +36,7 @@ Channel::Channel(EventLoop* loop, int fd__)
 
 Channel::~Channel()
 {
+  LOG_DBG("channel is free:%d",fd_);
   assert(!eventHandling_);
   assert(!addedToLoop_);
   if (loop_->isInLoopThread())
@@ -108,6 +109,7 @@ void Channel::handleEventWithGuard(Timestamp receiveTime)
   }
   if (revents_ & POLLOUT)
   {
+    LOG_WARN("fd = %d Channel::handle_event() POLLOUT",fd_);
     if (writeCallback_) writeCallback_();
   }
   eventHandling_ = false;

@@ -23,7 +23,7 @@ TcpSocket::~TcpSocket()
 
 void TcpSocket::AsyncConnect(ConnectionCallback callback)
 {
-  LOG_DBG("TcpClient::connect[%s] - connecting to %s", name_.c_str(), serverAddr_.toIpPort().c_str());
+  LOG_DBG("TcpClient::connect[%s] - connecting to %s connect status:%d", name_.c_str(), serverAddr_.toIpPort().c_str(),state_);
   connect_ = true;
   loop_->runInLoop(std::bind(&TcpSocket::connectInLoop, this)); // FIXME: unsafe
   connectedCallback_ = callback;
@@ -238,7 +238,7 @@ void TcpSocket::handleLinkWrite()
     }
     else
     {
-
+      LOG_DBG("connect_: %d",connect_);
       if (connect_)
       {
         connectEstablished(sockfd);
@@ -273,6 +273,7 @@ void TcpSocket::handleLinkError()
       connectedCallback_(shared_from_this(),-1);
     }
   }
+  setState(kDisconnected);
 }
 
 int TcpSocket::removeAndResetChannel()

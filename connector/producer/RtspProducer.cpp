@@ -1,9 +1,13 @@
 
 #include "producer/RtspProducer.h"
 
+
+
+
+
 RtspProducer::RtspProducer(EventLoop& loop)
 {
-	muduo::net::InetAddress peerAddr("192.168.1.51", 554);
+	muduo::net::InetAddress peerAddr("10.0.21.42", 554);
 	std::string name = "test";
 	m_socket = std::make_shared<TcpSocket>(&loop,peerAddr,"test");
 }
@@ -33,12 +37,15 @@ RtspProducer::~RtspProducer()
 
 int RtspProducer::FrameReadyProcess( RTS_FRAME_READY_INFO &tFrameReadyInfo )
 {
-	//log_debug("mediaType:%d,buffer:%x_%x_%x_%x_%x,len:%d,timestamp:%d,keyframe:%d",tFrameReadyInfo.m_nMediaType,tFrameReadyInfo.m_pFrame[0],tFrameReadyInfo.m_pFrame[1],tFrameReadyInfo.m_pFrame[2],tFrameReadyInfo.m_pFrame[3],tFrameReadyInfo.m_pFrame[4],tFrameReadyInfo.m_nLength,tFrameReadyInfo.m_nTimeStamp,tFrameReadyInfo.m_bKeyFrame);
+	log_debug("mediaType:%d,buffer:%x_%x_%x_%x_%x,len:%d,timestamp:%d,keyframe:%d",tFrameReadyInfo.m_nMediaType,tFrameReadyInfo.m_pFrame[0],tFrameReadyInfo.m_pFrame[1],tFrameReadyInfo.m_pFrame[2],tFrameReadyInfo.m_pFrame[3],tFrameReadyInfo.m_pFrame[4],tFrameReadyInfo.m_nLength,tFrameReadyInfo.m_nTimeStamp,tFrameReadyInfo.m_bKeyFrame);
 	FRAME_INFO frame;
 	frame.buffer = (char *)tFrameReadyInfo.m_pFrame;
 	frame.len = tFrameReadyInfo.m_nLength;
 	frame.key = tFrameReadyInfo.m_bKeyFrame;
-	m_routerFrameCallback(frame);
+	if(m_routerFrameCallback)
+	{
+		m_routerFrameCallback(frame);
+	}
 	return SUCCESS;
 }
 
@@ -75,7 +82,7 @@ int RtspProducer::Init()
 
 		}
 	}
-	int nRet = m_rtspSession->InitRtspClient( "rtsp://192.168.1.51:554", "admin", "admin1234" );
+	int nRet = m_rtspSession->InitRtspClient( "rtsp://10.0.21.42:554", "admin", "admin123" );
 	if( nRet != SUCCESS )
 	{
 		log_debug( " CRtspRtsChannel InitRtspClient error");
@@ -129,23 +136,12 @@ int RtspProducer::Destroy()
 int RtspProducer::StartStream()
 {
     
-	//asio::ip::tcp::endpoint ep(asio::ip::make_address("192.168.1.51"), std::stoi("554"));
-	// m_socket.async_connect(ep,[this]( const asio::error_code& err ){
-    //       if (!err)
-    //       {
-	// 		SendOptionsRequest();
-    //         ReceiveRtspMessage();
-    //       }
-	// 	  else
-	// 	  {
-	// 		log_error("rtsp options send:%s",err.message().c_str());
-	// 	  }
-    // });
 	m_socket->SetReadCallback([this](const TcpSocketPtr& ptr,
                             Buffer* buffer,
                             muduo::Timestamp time){
 		int len = buffer->readAll(m_recvBuf.data()+m_recvLen);
 		m_recvLen += len;
+		log_debug("recv len:%d,sum len:%d",len,m_recvLen);
 		ReceiveTcpMessage();
 	});
 	m_socket->AsyncConnect([this](const TcpSocketPtr&,int err){
@@ -175,12 +171,7 @@ int RtspProducer::SendOptionsRequest()
 	
 	nLen = m_rtspSession->CreateOptionRequest( SendBuf, 2048 );
 	log_info( "rtsp options send:%s", SendBuf );
-	// asio::async_write(m_socket, asio::buffer(SendBuf,strlen(SendBuf)), [this](const asio::error_code& err, size_t len) {
-    //     if(err)
-	// 	{
-	// 		log_error("rtsp options send:%s",err.message().c_str());
-	// 	}
-    // });
+
 	m_socket->Send(SendBuf,strlen(SendBuf));
 	m_currStatus = "option";
 	return SUCCESS;
@@ -262,36 +253,35 @@ int RtspProducer::SendTeardownRequest()
 
 int RtspProducer::ReceiveTcpMessage()
 {
+start:
 	if(m_recvBuf[0] == 0x24)
 	{
 		if(m_recvLen <4)
 			return 0;
 		int len = 0 ;
 		len = ((m_recvBuf[2]&0xff)<<8) +(m_recvBuf[3]&0xff);
+		log_debug("rtp len:%d,sum len:%d",len,m_recvLen);
 		if(m_recvLen >= (len + 4) )
 		{
 			ReceiveRtpMessage(len);
 			std::rotate(m_recvBuf.begin(),m_recvBuf.begin()+len+4,m_recvBuf.end());
-			m_recvLen = m_recvLen -(len+4);
+			m_recvLen -=4;
+			m_recvLen -=len;
+			log_debug("rtp len:%d,sum len:%d",len,m_recvLen);
+			if((m_recvLen != 0)&&(m_recvBuf[0] == 0x24))
+				goto start;
 		}
 	}
-	if(m_recvLen != 0)
+	else if(m_recvLen != 0)
 	{
-		
+		log_debug("ReceiveRtspMessage:%s",m_recvBuf.data());
+		ReceiveRtspMessage();
 	}
 	return 0;
 }
 
 int RtspProducer::ReceiveRtspMessage()
 {
-	if(m_recvBuf[0] == '$')
-	{
-		int nPackageNum = CRtpSession::ParsePackageNum( m_recvBuf.data() );
-		log_debug("nPackageNum :%d",nPackageNum);
-		m_rtpVideoSession->ParsePackage( (char*)m_recvBuf.data(), m_recvLen, m_videoRtpStreamInfo );
-		m_recvBuf.fill(0);
-		return 0;
-	}
 	if(m_currStatus == "option")
 	{
 		int nRet = m_rtspSession->ParseOptionReply( m_recvBuf.data() );
@@ -354,8 +344,7 @@ int RtspProducer::ReceiveRtspMessage()
 		else
 		{
 			//SendPlayRequest();
-			ReceiveFrameHeader();
-			return 0;
+			//ReceiveFrameHeader();
 		}
 	}
 	else if(m_currStatus == "teardown")
@@ -366,6 +355,7 @@ int RtspProducer::ReceiveRtspMessage()
 			log_debug("ParseTeardownReply:%d",nRet);
 		}
 	}
+	m_recvLen = 0;
 	m_recvBuf.fill(0);
 	return SUCCESS;
 }
@@ -375,7 +365,7 @@ int RtspProducer::ReceiveRtpMessage(int len)
 	if(m_recvBuf[0] == 0x24&&m_recvBuf[1] == 0x00)
 	{
 		int nPackageNum = CRtpSession::ParsePackageNum( (char*)(m_recvBuf.data()+4) );
-		//log_debug("nPackageNum :%d",nPackageNum);
+		log_debug("nPackageNum :%d",nPackageNum);
 		m_rtpVideoSession->ParsePackage( (char*)(m_recvBuf.data()+4), len, m_videoRtpStreamInfo );
 	}
 	else if(m_recvBuf[0] == 0x24&&m_recvBuf[1] == 0x01)
@@ -473,6 +463,7 @@ int RtspProducer::ReceiveFrameHeader()
 }
 int RtspProducer::ReceiveFrameBody(int len)
 {
+	return 0;
 }
 #if 0
 int RtspProducer::ReceiveFrameBody(int len)

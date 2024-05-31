@@ -54,7 +54,7 @@ private:
     CRtcpSession *m_rtcpVideoSession = nullptr;
     RTP_STREAM_INFO m_videoRtpStreamInfo;
     std::shared_ptr<TcpSocket> m_socket = nullptr;
-    std::array<char,2048> m_recvBuf;
+    std::array<char,102400> m_recvBuf;
     int m_recvLen = 0;
     std::string m_currStatus = "teardown";
     std::function<void(FRAME_INFO)> m_routerFrameCallback;
