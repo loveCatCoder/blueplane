@@ -39,16 +39,17 @@ public:
     //Receive tcp rtsp rtp message
     int ReceiveTcpMessage();
     int ReceiveRtspMessage();
-    int  ReceiveRtpMessage(int len);
+    int ReceiveRtpMessage(int len);
 
     int SetRouterFrameCallback(std::function<void(FRAME_INFO)> cb);
     int SetReportStatusCallback(std::function<int(std::string id,E_NODE_STATUS eStatus)> cb){m_statusCallback = cb;return SUCCESS;}
 
     int CreateVideoRtcpPackage( E_RTCP_PACKET_TYPE PackageType, unsigned char* pBuf, int* pnLen );
-private:
+
     int ReceiveFrameHeader();
     int ReceiveFrameBody(int len);
 private:
+
     CRtspClient *m_rtspSession = nullptr;
     CRtpSession *m_rtpVideoSession = nullptr;
     CRtcpSession *m_rtcpVideoSession = nullptr;
