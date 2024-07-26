@@ -89,11 +89,9 @@ void EchoServer::PrintClientInfo()
 
 void StartUdpSocket(EventLoop* loop)
 {
-    muduo::net::InetAddress listenAddr();
     UdpSocket client(loop);
     std::shared_ptr<UdpSocket> ptr;
     ptr.reset(&client);
-    ptr->Start();
 
     while (true)
     {
@@ -117,18 +115,20 @@ int main()
 
 
 
-    // std::thread workthread(std::bind(&EventLoop::loop,&loop));
-    // workthread.detach();
+    std::thread workthread(std::bind(&EventLoop::loop,&loop));
+    workthread.detach();
 
     EchoServer echo(&loop);
     echo.InIt();
+
+
 
     loop.runEvery(3, [&echo]()
                   { echo.PrintClientInfo(); });
 
 
 
-    loop.loop();
+    StartUdpSocket(&loop);
   
     while (true)
     {

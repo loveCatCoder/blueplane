@@ -7,34 +7,30 @@ using namespace muduo;
 using namespace muduo::net;
 
 UdpSocket::UdpSocket(EventLoop *loop,
-                const InetAddress &serverAddr,UdpMessageCallback cb):
+                const InetAddress &localAddr):
                                               loop_(loop),
-                                              serverAddr_(serverAddr)
+                                              localAddr_(localAddr)
 {
-    int sockfd = sockets::createNonblockingUdpOrDie(serverAddr_.family());
-    mode_ = cb? Modes::mServer:Modes::mClient;
+    int sockfd = sockets::createNonblockingUdpOrDie(localAddr_.family());
+
     socket_.reset(new Socket(sockfd));
 
-    if(mode_ == Modes::mServer)
-    {
-        socket_->setReuseAddr(true);
-        socket_->setReusePort(serverAddr.toPort());
-        socket_->bindAddress(serverAddr);
-        dataCallback_ = cb;
-        data_channel_.reset(new Channel(loop_, sockfd));
-        data_channel_->setReadCallback(
-        std::bind(&UdpSocket::handleRead, this, _1));
-        data_channel_->setWriteCallback(
-        std::bind(&UdpSocket::handleWrite, this));
-        data_channel_->setCloseCallback(
-        std::bind(&UdpSocket::handleClose, this));
-        data_channel_->setErrorCallback(
-        std::bind(&UdpSocket::handleError, this));
-    }
-    
+    socket_->setReuseAddr(true);
+    socket_->setReusePort(localAddr.toPort());
+    socket_->bindAddress(localAddr);
+    data_channel_.reset(new Channel(loop_, sockfd));
+    data_channel_->setReadCallback(
+    std::bind(&UdpSocket::handleRead, this, _1));
+    data_channel_->setWriteCallback(
+    std::bind(&UdpSocket::handleWrite, this));
+    data_channel_->setCloseCallback(
+    std::bind(&UdpSocket::handleClose, this));
+    data_channel_->setErrorCallback(
+    std::bind(&UdpSocket::handleError, this));
+
 }
 
-UdpSocket::UdpSocket(EventLoop *loop, bool ipv6 )
+UdpSocket::UdpSocket(EventLoop *loop, bool ipv6 ) :loop_(loop)
 {
     int sockfd = 0;
     if(ipv6)
@@ -46,7 +42,6 @@ UdpSocket::UdpSocket(EventLoop *loop, bool ipv6 )
         sockfd = sockets::createNonblockingUdpOrDie(AF_INET);
     }
 
-    mode_ = mClient;
     socket_.reset(new Socket(sockfd));
 
 }
@@ -64,15 +59,15 @@ int UdpSocket::Write(const void* buffer,int len,const InetAddress &remoteAddr)
 
 }
 
-int UdpSocket::Start()
+int UdpSocket::SetMessageCallback(UdpMessageCallback callback)
 {
-    if(mode_ == Modes::mServer)
-      {
-        data_channel_->tie(shared_from_this());
-        data_channel_->enableReading();
-      }
+    dataCallback_ = callback;
+    data_channel_->tie(shared_from_this());
+    data_channel_->enableReading();
     return 0;
 }
+
+
 
 void UdpSocket::handleRead(Timestamp receiveTime)
 {

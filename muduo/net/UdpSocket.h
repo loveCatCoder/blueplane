@@ -28,13 +28,12 @@ class UdpSocket :noncopyable,
 
 public:
     UdpSocket(EventLoop *loop,
-                const InetAddress &serverAddr,
-                UdpMessageCallback cb = nullptr);
+                const InetAddress &serverAddr);
     UdpSocket(EventLoop *loop, bool ipv6 = false);
     ~UdpSocket();
 
     int Write(const void* buffer,int len,const InetAddress &remoteAddr);
-    int Start();
+    int SetMessageCallback(UdpMessageCallback callback);
 private:
     void handleRead(Timestamp receiveTime);
     void handleWrite();
@@ -42,13 +41,12 @@ private:
     void handleError();
 
 private:
-    enum Modes { mServer, mClient };
-    Modes mode_;
+
     EventLoop* loop_;
-    InetAddress serverAddr_; 
+    InetAddress localAddr_; 
     std::unique_ptr<Socket> socket_;
     std::unique_ptr<Channel> data_channel_;
-    UdpMessageCallback dataCallback_;
+    UdpMessageCallback dataCallback_ = nullptr;
     std::array<char,1500> recvBuffer_;
 };
 

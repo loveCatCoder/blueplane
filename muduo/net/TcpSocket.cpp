@@ -417,10 +417,6 @@ void TcpSocket::handleClose()
     closeCallback_(ptr);
   }
 
-  // TcpConnectionPtr guardThis(shared_from_this());
-  // connectionCallback_(guardThis);
-  // must be the last line
-  // closeCallback_(guardThis);
 }
 
 void TcpSocket::handleError()
