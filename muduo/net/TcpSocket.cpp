@@ -17,6 +17,15 @@ TcpSocket::TcpSocket(EventLoop *loop,
   LOG_DBG("TcpSocket ServerAddr: %s", serverAddr_.toIpPort().c_str());
 }
 
+TcpSocket::TcpSocket(EventLoop *loop,
+            const InetAddress &peerAddr):loop_(loop),
+                                        serverAddr_(peerAddr),
+                                          connect_(false),
+                                        state_(kConnecting)
+{
+
+}
+
 TcpSocket::~TcpSocket()
 {
 }
@@ -31,6 +40,7 @@ void TcpSocket::AsyncConnect(ConnectionCallback callback)
 
 void TcpSocket::Disconnect()
 {
+  connectDestroyed();
 }
 
 void TcpSocket::Send(const void* message, int len)
@@ -43,21 +53,32 @@ void TcpSocket::SetReadCallback(MessageCallback callback)
   messageCallback_ = callback;
 }
 
+void TcpSocket::SetCloseCallback(CloseCallback callback)
+{
+  closeCallback_ = callback;
+}
+
 void TcpSocket::send(const StringPiece& message)
 {
    if (state_ == kConnected)
   {
     if (loop_->isInLoopThread())
     {
+      LOG_DBG("sendInLoop");
       sendInLoop(message);
     }
     else
     {
+      LOG_DBG("runInLoop");
        std::function<void()> funcWithoutParam = [this,message]() {
         sendInLoop(message); 
       };
       loop_->runInLoop(funcWithoutParam);
     }
+  }
+  else
+  {
+    LOG_DBG("send data to unconnected socket");
   }
 }
 
@@ -387,6 +408,14 @@ void TcpSocket::handleClose()
   // we don't close fd, leave it to dtor, so we can find leaks easily.
   setState(kDisconnected);
   data_channel_->disableAll();
+  data_channel_->remove();
+
+  auto ptr =shared_from_this();
+
+  if(closeCallback_)
+  {
+    closeCallback_(ptr);
+  }
 
   // TcpConnectionPtr guardThis(shared_from_this());
   // connectionCallback_(guardThis);

@@ -10,11 +10,12 @@
 
 #ifndef MUDUO_NET_ACCEPTOR_H
 #define MUDUO_NET_ACCEPTOR_H
-
+#include <memory>
 #include <functional>
 
 #include <net/Channel.h>
 #include <net/Socket.h>
+#include <net/TcpSocket.h>
 
 namespace muduo
 {
@@ -30,7 +31,7 @@ class InetAddress;
 class Acceptor : noncopyable
 {
  public:
-  typedef std::function<void (int sockfd, const InetAddress&)> NewConnectionCallback;
+  typedef std::function<void (int err, std::shared_ptr<TcpSocket>)> NewConnectionCallback;
 
   Acceptor(EventLoop* loop, const InetAddress& listenAddr, bool reuseport);
   ~Acceptor();
@@ -50,6 +51,7 @@ class Acceptor : noncopyable
   NewConnectionCallback newConnectionCallback_;
   bool listenning_;
   int idleFd_;
+  
 };
 
 }  // namespace net

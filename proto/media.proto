@@ -1,0 +1,10 @@
+syntax = "proto3"; // 版本声明，使用Protocol Buffers v3版本
+
+
+option go_package = "blueplane/pbmedia"; // 指定编译生成的文件目录，也可以指定golang包名
+package pbmedia; // 默认包名
+
+message ComReturn {
+    int32   Code = 1;
+    string  Message = 2;
+}

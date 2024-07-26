@@ -21,7 +21,7 @@ namespace CurrentThread
 
   inline int tid()
   {
-    if (__builtin_expect(t_cachedTid == 0, 0))
+    if (t_cachedTid == 0)
     {
       cacheTid();
     }
@@ -43,11 +43,6 @@ namespace CurrentThread
     return t_threadName;
   }
 
-  bool isMainThread();
-
-  void sleepUsec(int64_t usec);  // for testing
-
-  string stackTrace(bool demangle);
 }  // namespace CurrentThread
 }  // namespace muduo
 

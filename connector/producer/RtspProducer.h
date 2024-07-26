@@ -14,7 +14,7 @@
 
 using namespace muduo::net;
 
-class RtspProducer
+class RtspProducer 
 {
 private:
     /* data */
@@ -36,6 +36,7 @@ public:
     int SendVideoSetupRequest();
     int SendPlayRequest();
     int SendTeardownRequest();
+    
     //Receive tcp rtsp rtp message
     int ReceiveTcpMessage();
     int ReceiveRtspMessage();

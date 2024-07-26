@@ -31,9 +31,14 @@ class TcpSocket: noncopyable,
 {
 
 public:
+    friend class Acceptor;
+
+public:
     TcpSocket(EventLoop *loop,
                 const InetAddress &peerAddr,
                 const string &nameArg);
+    TcpSocket(EventLoop *loop,
+            const InetAddress &peerAddr);
     ~TcpSocket();
 
     void AsyncConnect(ConnectionCallback callback);
@@ -41,6 +46,10 @@ public:
 
     void Send(const void* message, int len);
     void SetReadCallback(MessageCallback callback);
+    void SetCloseCallback( CloseCallback callback);
+
+    int GetSocketFd(){return socket_->fd();}
+
 private:
     enum States { kDisconnected, kConnecting, kConnected, kDisconnecting };
     void connectInLoop();
@@ -69,8 +78,8 @@ private:
     void sendInLoop(const void* message, size_t len);
     void shutdownInLoop();
     const char* stateToString() const;
-private:
 
+private:
     EventLoop* loop_;
     InetAddress serverAddr_; 
     const InetAddress localAddr_;

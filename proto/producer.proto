@@ -1,0 +1,41 @@
+syntax = "proto3"; // 版本声明，使用Protocol Buffers v3版本
+
+import "media.proto";
+
+option go_package = "blueplane/pbproducer"; // 指定编译生成的文件目录，也可以指定golang包名
+package pbproducer; // 默认包名
+
+
+
+message GetStreamInfoReq {
+    string ProducerId = 1;
+    string ConsumerId = 2;
+}
+
+message GetStreamDataReq {
+    string ProducerId = 1;
+    string ConsumerId = 2;
+}
+
+message GetStreamInfoRsp{
+    string ProducerId = 1;
+    string ConsumerId = 2;
+    string VideoCodingFormat = 3;
+    int32 width =4 ;
+    int32 height=5;
+    int32 FrameRate=6;
+    pbmedia.ComReturn ret = 7;
+}
+
+message GetStreamDataRsp{
+    int64 Timestamp = 1;
+    bool  KeyFrame = 2;
+    int32 FrameType = 3;
+    bytes FrameData = 4;
+    pbmedia.ComReturn ret = 5;
+}
+
+service Producer {
+    rpc GetStreamInfo(GetStreamInfoReq) returns (GetStreamInfoRsp) {}
+    rpc GetStreamData(GetStreamDataReq) returns ( stream GetStreamDataRsp) {}
+}

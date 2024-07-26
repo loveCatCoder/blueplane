@@ -16,6 +16,7 @@ file(GLOB_RECURSE SRC_DIR_LIST
         "protocol/rtsp/*.cpp" 
         "protocol/sdp/*.cpp" 
         "protocol/sip/*.cpp" 
+        "api/*.cc" 
 )
 
 

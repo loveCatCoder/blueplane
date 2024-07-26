@@ -1,12 +1,5 @@
 
-
-
-
-
 #include <base/Logging.h>
-
-
-
 #include <thread>
 
 __thread char t_errnobuf[512];

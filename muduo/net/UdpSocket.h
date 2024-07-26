@@ -28,7 +28,8 @@ class UdpSocket :noncopyable,
 
 public:
     UdpSocket(EventLoop *loop,
-                const InetAddress &serverAddr,UdpMessageCallback cb = nullptr);
+                const InetAddress &serverAddr,
+                UdpMessageCallback cb = nullptr);
     UdpSocket(EventLoop *loop, bool ipv6 = false);
     ~UdpSocket();
 

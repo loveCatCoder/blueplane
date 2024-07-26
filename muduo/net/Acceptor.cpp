@@ -13,6 +13,7 @@
 #include <net/InetAddress.h>
 #include <net/SocketsOps.h>
 
+
 #include <errno.h>
 #include <fcntl.h>
 //#include <sys/types.h>
@@ -34,7 +35,7 @@ Acceptor::Acceptor(EventLoop* loop, const InetAddress& listenAddr, bool reusepor
   acceptSocket_.setReusePort(reuseport);
   acceptSocket_.bindAddress(listenAddr);
   acceptChannel_.setReadCallback(
-      std::bind(&Acceptor::handleRead, this));
+  std::bind(&Acceptor::handleRead, this));
 }
 
 Acceptor::~Acceptor()
@@ -64,7 +65,9 @@ void Acceptor::handleRead()
     // LOG_TRACE << "Accepts of " << hostport;
     if (newConnectionCallback_)
     {
-      newConnectionCallback_(connfd, peerAddr);
+      auto ptr = std::make_shared<TcpSocket>(loop_, peerAddr);
+      ptr->connectEstablished(connfd);
+      newConnectionCallback_(0, ptr);
     }
     else
     {
